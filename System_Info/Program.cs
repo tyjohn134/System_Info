@@ -14,6 +14,7 @@ namespace System_Info
 
     class Program
     {
+        //Helper function to convert bytes to varying sizes
         private static string FormatBytes(long bytes)
         {
             string[] Suffix = { "B", "KB", "MB", "GB", "TB" };
@@ -26,6 +27,8 @@ namespace System_Info
 
             return String.Format("{0:0.##} {1}", dblSByte, Suffix[i]);
         }
+
+        //Gets all programs running upon start up
         public void GetStartups()
         {
             try
@@ -45,6 +48,7 @@ namespace System_Info
             }
         }
 
+        //Gets drive information -- freespace, percent free, drive letter
         public void GetDriveInfo()
         {
             try
@@ -52,13 +56,12 @@ namespace System_Info
                 ManagementObjectSearcher searcher =
                     new ManagementObjectSearcher("root\\CIMV2",
                     "SELECT * from win32_logicaldisk where DriveType = '3'");
-                Console.WriteLine("========== Auto Start Programs ==========");
+                Console.WriteLine("========== Drive Information ==========");
                 foreach (ManagementObject queryObj in searcher.Get())
                 {
                     if(Convert.ToInt64(queryObj["Size"]) > 1073741823)
                     {
                         Console.WriteLine("\n");
-                        Console.WriteLine("========== Drive Information ==========");
                         Console.WriteLine("Drive Letter: " + queryObj["DeviceID"]);
                         string freespace = FormatBytes( Convert.ToInt64(queryObj["FreeSpace"]) );
                         Console.WriteLine("FreeSpace: "+String.Format("{0:N0}",freespace.ToString()));
@@ -69,6 +72,30 @@ namespace System_Info
                         int percentfree = (int)(intfree / intsize * 100);
                         Console.WriteLine("Percent Free: " + String.Format("{0:N0}", percentfree.ToString() )+ "%");
                     }
+                }
+            }
+            catch (ManagementException e)
+            {
+                MessageBox.Show("An error occurred while querying for WMI data: " + e.Message);
+            }
+        }
+
+
+        public void GetIP()
+        {
+            try
+            {
+                ManagementObjectSearcher searcher =
+                    new ManagementObjectSearcher("root\\CIMV2",
+                    "SELECT * from Win32_NetworkAdapterConfiguratio");
+                Console.WriteLine("========== Network Information ==========");
+                foreach (ManagementObject queryObj in searcher.Get())
+                {
+                        Console.WriteLine("\n");
+                        Console.WriteLine("Description: " + queryObj["Description"]);
+                        Console.WriteLine("DHCP Enabled: " + queryObj["DHCPEnabled"]);
+                        Console.WriteLine("IP Address: " +  queryObj["IPAddress"]);
+                        Console.WriteLine("Default Gateway: " + queryObj["DefaultIPGateway"]);
                 }
             }
             catch (ManagementException e)
