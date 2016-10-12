@@ -14,7 +14,18 @@ namespace System_Info
 
     class Program
     {
+        private static string FormatBytes(long bytes)
+        {
+            string[] Suffix = { "B", "KB", "MB", "GB", "TB" };
+            int i;
+            double dblSByte = bytes;
+            for (i = 0; i < Suffix.Length && bytes >= 1024; i++, bytes /= 1024)
+            {
+                dblSByte = bytes / 1024.0;
+            }
 
+            return String.Format("{0:0.##} {1}", dblSByte, Suffix[i]);
+        }
         public void GetStartups()
         {
             try
@@ -44,14 +55,19 @@ namespace System_Info
                 Console.WriteLine("========== Auto Start Programs ==========");
                 foreach (ManagementObject queryObj in searcher.Get())
                 {
-                    if((int)queryObj["Size"] > 1073741823)
+                    if(Convert.ToInt64(queryObj["Size"]) > 1073741823)
                     {
                         Console.WriteLine("\n");
                         Console.WriteLine("========== Drive Information ==========");
-                        Console.WriteLine(queryObj["DeviceID"]);
-                        int freespace = (int)queryObj["FreeSpace"] / 1024;
-                        
-
+                        Console.WriteLine("Drive Letter: " + queryObj["DeviceID"]);
+                        string freespace = FormatBytes( Convert.ToInt64(queryObj["FreeSpace"]) );
+                        Console.WriteLine("FreeSpace: "+String.Format("{0:N0}",freespace.ToString()));
+                        string totalsize = FormatBytes(Convert.ToInt64(queryObj["Size"]));
+                        Console.WriteLine("Total Drive Capacity: " + String.Format("{0:N0}", totalsize.ToString()));
+                        double intfree = Convert.ToInt64(queryObj["FreeSpace"]) / 1024.0;
+                        double intsize = Convert.ToInt64(queryObj["Size"]) / 1024.0;
+                        int percentfree = (int)(intfree / intsize * 100);
+                        Console.WriteLine("Percent Free: " + String.Format("{0:N0}", percentfree.ToString() )+ "%");
                     }
                 }
             }
@@ -65,6 +81,7 @@ namespace System_Info
         {
             Program n = new Program();
             n.GetStartups();
+            n.GetDriveInfo();
             Console.WriteLine("Press any key...");
             Console.ReadKey();
         }
