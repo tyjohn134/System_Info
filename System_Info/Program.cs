@@ -258,8 +258,36 @@ namespace System_Info
                     "SELECT * from Win32_OperatingSystem");
                 foreach (ManagementObject queryObj in searcher.Get())
                 {
+                    
+                    DateTime dtBootTime = ManagementDateTimeConverter.ToDateTime(queryObj["LastBootUpTime"].ToString());
+
+                    // display the start time and date
+                    string txtDate = dtBootTime.ToLongDateString();
+                    string txtTime = dtBootTime.ToLongTimeString();
                     Console.WriteLine("Operating System: " + queryObj["Caption"]);
                     Console.WriteLine("Operating System Build Number " + queryObj["BuildNumber"]);
+                    Console.WriteLine("Last Boot Time: " + txtDate + " " + txtTime);
+                }
+            }
+            catch (ManagementException e)
+            {
+                MessageBox.Show("An error occurred while querying for WMI data: " + e.Message);
+            }
+            try
+            {
+                ManagementObjectSearcher Processes = new ManagementObjectSearcher("SELECT * FROM Win32_Process Where Name='explorer.exe'");
+
+                foreach (ManagementObject Process in Processes.Get())
+                {
+                    if (Process["ExecutablePath"] != null)
+                    {
+                        string ExecutablePath = Process["ExecutablePath"].ToString();
+
+                        string[] OwnerInfo = new string[2];
+                        Process.InvokeMethod("GetOwner", OwnerInfo);
+
+                        Console.WriteLine("Current logged on user: " + OwnerInfo[1] +"\\" + OwnerInfo[0]);
+                    }
                 }
             }
             catch (ManagementException e)
@@ -267,9 +295,29 @@ namespace System_Info
                 MessageBox.Show("An error occurred while querying for WMI data: " + e.Message);
             }
 
-            //TODO: add Last Reboot Time
-            //TODO: add Current User
-            //TODO: add Memory Information -- memory size, clock speed, serial, part number
+            Console.WriteLine("\n========== Memory Information ==========");
+            try
+            {
+                ManagementObjectSearcher searcher =
+                    new ManagementObjectSearcher("root\\CIMV2",
+                    "SELECT * from Win32_PhysicalMemory");
+                foreach (ManagementObject queryObj in searcher.Get())
+                {
+                    Console.WriteLine("Location: " + queryObj["BankLabel"]);
+                    string size = FormatBytes(Convert.ToInt64(queryObj["Capacity"]));
+                    Console.WriteLine("Memory Size: " + String.Format("{0:N0}", size.ToString()));
+                    Console.WriteLine("Memory Clock Speed: " + queryObj["Speed"]);
+                    Console.WriteLine("Memory Serial Number: " + queryObj["SerialNumber"]);
+                    Console.WriteLine("Memory Part Number: " + queryObj["PartNumber"]);
+                    Console.WriteLine("Manufacturer: " + queryObj["Manufacturer"]);
+                }
+            }
+            catch (ManagementException e)
+            {
+                MessageBox.Show("An error occurred while querying for WMI data: " + e.Message);
+            }
+
+         
             //TODO: add Battery Information -- estiamtedchargeremaing, status and runtime
         }
 
