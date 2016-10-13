@@ -317,7 +317,7 @@ namespace System_Info
                 MessageBox.Show("An error occurred while querying for WMI data: " + e.Message);
             }
 
-         
+            
             //TODO: add Battery Information -- estiamtedchargeremaing, status and runtime
         }
 
